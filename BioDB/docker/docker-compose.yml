@@ -1,0 +1,46 @@
+
+services:
+  mysql:
+    build: ./mysql
+    container_name: docker-mysql
+    volumes:
+      - mysqldb:/var/lib/mysql       #Databaseの永続化のためdocker volumeと繋げる
+      - ../SQL:/home/user/SQL                  #SQLフォルダーと/SQLを繋げる。/SQLはmysql/Dockerfileで作成
+    #  - ../mysql_log:/var/log/mysql  #log出力用
+    restart: always
+    environment:
+     MYSQL_ROOT_PASSWORD: password
+
+  php:
+    build: ./php
+    container_name: docker-php
+    ports:
+      - '80:80'
+    volumes:
+      - ../html:/html #public_htmlフォルダと/var/www/htmlを繋げる
+    restart: always
+    depends_on:
+      - mysql
+
+  nextjs:
+    build:
+      context: ./nextjs
+    container_name: docker-nextjs
+    volumes:
+      - ../my-app:/app/my-app:delegated
+      - /app/my-app/node_modules  # node_modulesはコンテナ内のみで管理
+      # - /app/my-app/.next
+    ports:
+      - "3000:3000"
+    command: npm run dev
+    working_dir: /app/my-app
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    tty: true
+
+
+volumes:
+  mysqldb:
+
+
